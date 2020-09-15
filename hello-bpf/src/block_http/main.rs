@@ -14,3 +14,4 @@ pub fn block_port_80(ctx: XdpContext) -> XdpResult {
     }
     Ok(XdpAction::Pass)
 }
+

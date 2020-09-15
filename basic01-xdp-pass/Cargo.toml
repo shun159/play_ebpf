@@ -1,0 +1,16 @@
+[package]
+name = "basic01-xdp-pass"
+version = "0.1.0"
+authors = ["Eishun Kondoh <dreamdiagnosis@gmail.com>"]
+edition = "2018"
+
+[build-dependencies]
+cargo-bpf = { version = "^1.1.0", default-features = false, features = ["build"] }
+
+[dependencies]
+probes = { path = "./probes" }
+redbpf-probes = "1.0"
+redbpf = {  version = "^1.1.0", features = ["load"] }
+tokio = { version = "0.2.4", features = ["rt-core", "io-driver", "macros", "signal", "time"] }
+futures = "0.3"
+getopts = "0.2"
