@@ -71,4 +71,3 @@ fn parameters() -> options::Opts {
         None => process::exit(1),
     }
 }
-
