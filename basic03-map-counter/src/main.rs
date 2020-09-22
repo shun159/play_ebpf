@@ -7,7 +7,8 @@ mod options;
 use redbpf::{load::Loaded, load::Loader, xdp, HashMap};
 use probes::kern::DataRec;
 use options::parse;
-use std::{process, mem, io};
+use std::{process, io};
+use std::mem::MaybeUninit;
 use tokio::runtime::Runtime;
 use tokio::time::{delay_for, Duration};
 use tokio::signal;
@@ -66,7 +67,6 @@ async fn do_main(opts: options::Opts) {
 async fn stats_poll(loader: Loaded) {
     let map = loader.map(MAP_NAME).unwrap();
     let hmap = &HashMap::<u32, DataRec>::new(map).unwrap();
-
     let record = &mut StatsRecord::default();
 
     /* Get initial reading quickly */
@@ -105,8 +105,7 @@ fn calc_period(curr: &Record, prev: &Record) -> u64 {
 fn map_collect(hmap: &HashMap<u32, DataRec>, rec: &mut Record) {
     rec.timestamp = gettime();
     let value = match hmap.get(XDP_PASS) {
-        Some(value) =>
-            value,
+        Some(value) => value,
         None => {
             hmap.set(XDP_PASS, DataRec { rx_packets: 0 });
             DataRec { rx_packets: 0 }
@@ -115,14 +114,14 @@ fn map_collect(hmap: &HashMap<u32, DataRec>, rec: &mut Record) {
     rec.total.rx_packets = value.rx_packets;
 }
 
-#[allow(deprecated)]
 fn gettime() -> u64 {
     unsafe {
-        let mut tp = mem::uninitialized();
-        if clock_gettime(CLOCK_MONOTONIC, &mut tp) < 0 {
+        let mut tp = MaybeUninit::<timespec>::zeroed();
+        if clock_gettime(CLOCK_MONOTONIC, &mut tp as *mut _ as *mut _) < 0 {
             println!("Error with gettimeofday! {}", io::Error::last_os_error());
             process::exit(1);
         } else {
+            let tp = tp.assume_init();
             (tp.tv_sec as u64) * NANOSEC_PER_SEC + (tp.tv_nsec as u64)
         }
     }
