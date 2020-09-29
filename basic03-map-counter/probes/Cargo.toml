@@ -5,11 +5,11 @@ edition = '2018'
 
 [dependencies]
 cty = "0.2"
-redbpf-macros = "1.0"
-redbpf-probes = "1.0"
+redbpf-probes = { git = "http://github.com/shun159/redbpf", branch = "master" , version = "1.1" }
+redbpf-macros = { git = "http://github.com/shun159/redbpf", branch = "master" , version = "1.1" }
 
 [build-dependencies]
-cargo-bpf = "1.0"
+cargo-bpf = { git = "http://github.com/shun159/redbpf", branch = "master", version = "1.1" }
 
 [features]
 default = []

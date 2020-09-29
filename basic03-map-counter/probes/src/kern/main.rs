@@ -11,26 +11,18 @@ program!(0xFFFFFFFE, "GPL");
 static XDP_PASS: u32 = 2;
 
 #[map("xdp_stats_map")]
-static mut hmap: HashMap<u32, DataRec> = HashMap::with_max_entries(10);
+static mut hmap: ArrayMap<u32, DataRec> = ArrayMap::with_max_entries(10);
 
 #[xdp("xdp_stats1")]
-pub fn xdp_stats1_func(ctx: XdpContext) -> XdpResult {
+pub fn xdp_stats1_func(_ctx: XdpContext) -> XdpResult {
     /* Lookup in kernel BPF-side return pointer to actual data record */
-    let mut rec = find_datarec(XDP_PASS);
-    rec.rx_packets += 1;
-    return Ok(XdpAction::Pass)
-}
-
-#[inline]
-fn find_datarec(key: u32) -> &'static mut DataRec {
-    unsafe {
-        match hmap.get_mut(&key) {
-            Some(rec) => rec,
-            None => {
-                let rec = DataRec { rx_packets: 0 };
-                hmap.set(&key, &rec);
-                hmap.get_mut(&key).unwrap()
-            }
+    let key = XDP_PASS;
+    match unsafe { hmap.get_mut(&key) } {
+        None =>
+            Ok(XdpAction::Aborted),
+        Some(rec) => {
+            rec.rx_packets += 1;
+            Ok(XdpAction::Pass)
         }
     }
 }

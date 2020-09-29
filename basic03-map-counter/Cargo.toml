@@ -5,12 +5,12 @@ authors = ["Eishun Kondoh <dreamdiagnosis@gmail.com>"]
 edition = "2018"
 
 [build-dependencies]
-cargo-bpf = { version = "^1.1.0", default-features = false, features = ["build"] }
+cargo-bpf = { git = "http://github.com/shun159/redbpf", branch = "master", default-features = false, features = ["build"] , version = "*" }
 
 [dependencies]
 probes = { path = "./probes" }
-redbpf-probes = "1.0"
-redbpf = {  version = "^1.1.0", features = ["load"] }
+redbpf-probes = { git = "http://github.com/shun159/redbpf", branch = "master", version = "*"  }
+redbpf = { features = ["load"], git = "http://github.com/shun159/redbpf", branch = "master", version = "*"  }
 tokio = { version = "0.2.4", features = ["rt-core", "io-driver", "macros", "signal", "time"] }
 futures = "0.3"
 getopts = "0.2"
