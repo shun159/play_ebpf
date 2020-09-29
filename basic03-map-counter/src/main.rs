@@ -85,10 +85,15 @@ fn stats_print(rec_curr: &mut StatsRecord, rec_prev: &mut StatsRecord) {
     let curr: &Record = &rec_curr.stats;
     let prev: &Record = &rec_prev.stats;
     let period = calc_period(curr, prev);
-    if period > 0 {
+    if period > 0.0 {
         let packets: u64 = curr.total.rx_packets - prev.total.rx_packets;
-        let pps: u64 = packets / period;
-        println!("xdp_pass: {0:} pkts ({1:<010} pps) period: {2:}", packets, pps, period);
+        let pps: u64 = packets / period as u64;
+        println!(
+            "xdp_pass: {0:>12} pkts ({1:>10} pps) period: {2:>10}",
+            curr.total.rx_packets,
+            pps,
+            period
+        );
     }
 }
 
@@ -96,9 +101,9 @@ fn stats_collect(hmap: &ArrayMap<u32, DataRec>, stats_rec: &mut StatsRecord) {
     map_collect(hmap, &mut stats_rec.stats)
 }
 
-fn calc_period(curr: &Record, prev: &Record) -> u64 {
-    let mut period: u64 = curr.timestamp - prev.timestamp;
-    if period > 0 { period /= NANOSEC_PER_SEC; }
+fn calc_period(curr: &Record, prev: &Record) -> f64 {
+    let mut period = (curr.timestamp - prev.timestamp) as f64;
+    if period > 0.0 { period /= NANOSEC_PER_SEC as f64; }
     period
 }
 
