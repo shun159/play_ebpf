@@ -27,19 +27,10 @@ extern "C" {
     ) -> c_int;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Record {
     timestamp: u64,
     total: DataRec
-}
-
-impl Default for Record {
-    fn default() -> Self {
-        Record {
-            timestamp: 0,
-            total: DataRec { rx_packets: 0 }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -86,12 +77,17 @@ fn stats_print(rec_curr: &mut StatsRecord, rec_prev: &mut StatsRecord) {
     let prev: &Record = &rec_prev.stats;
     let period = calc_period(curr, prev);
     if period > 0.0 {
+        let rx_bytes_in_kb = (curr.total.rx_bytes as f64) / 1000.0;
         let packets: u64 = curr.total.rx_packets - prev.total.rx_packets;
+        let bytes: f64 = (curr.total.rx_bytes - prev.total.rx_bytes) as f64;
         let pps: u64 = packets / period as u64;
+        let mbps: f32 = (((bytes * 8.0) / period) / 1_000_000.0) as f32;
         println!(
-            "xdp_pass: {0:>12} pkts ({1:>10} pps) period: {2:>10}",
+            "xdp_pass: {0:>12} pkts ({1:>10} pps) {2:>11} Kbytes ({3:>6.4} Mbits/s)  period: {4:>10}",
             curr.total.rx_packets,
             pps,
+            rx_bytes_in_kb,
+            mbps,
             period
         );
     }
@@ -111,6 +107,7 @@ fn map_collect(hmap: &ArrayMap<u32, DataRec>, rec: &mut Record) {
     rec.timestamp = gettime();
     let value = hmap.get(XDP_PASS).unwrap();
     rec.total.rx_packets = value.rx_packets;
+    rec.total.rx_bytes = value.rx_bytes;
 }
 
 fn gettime() -> u64 {
