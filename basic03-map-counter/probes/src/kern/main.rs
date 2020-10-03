@@ -5,13 +5,14 @@
 
 use probes::kern::DataRec;
 use redbpf_probes::xdp::prelude::*;
+use redbpf_probes::maps::PerCPUArrayMap;
 
 program!(0xFFFFFFFE, "GPL");
 
 static XDP_PASS: u32 = 2;
 
 #[map("xdp_stats_map")]
-static mut hmap: ArrayMap<u32, DataRec> = ArrayMap::with_max_entries(4);
+static mut hmap: PerCPUArrayMap<u32, DataRec> = PerCPUArrayMap::with_max_entries(4);
 
 #[xdp("xdp_stats1")]
 pub fn xdp_stats1_func(ctx: XdpContext) -> XdpResult {

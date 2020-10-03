@@ -4,7 +4,7 @@ extern crate libc;
 
 mod options;
 
-use redbpf::{load::Loaded, load::Loader, xdp, ArrayMap};
+use redbpf::{load::Loaded, load::Loader, xdp, PerCPUArrayMap};
 use probes::kern::DataRec;
 use options::parse;
 use std::{process, io};
@@ -57,7 +57,7 @@ async fn do_main(opts: options::Opts) {
 
 async fn stats_poll(loader: Loaded) {
     let map = loader.map(MAP_NAME).unwrap();
-    let hmap = &ArrayMap::<u32, DataRec>::new(map).unwrap();
+    let hmap = &PerCPUArrayMap::<u32, DataRec>::new(map).unwrap();
     let record = &mut StatsRecord::default();
 
     /* Get initial reading quickly */
@@ -93,7 +93,7 @@ fn stats_print(rec_curr: &mut StatsRecord, rec_prev: &mut StatsRecord) {
     }
 }
 
-fn stats_collect(hmap: &ArrayMap<u32, DataRec>, stats_rec: &mut StatsRecord) {
+fn stats_collect(hmap: &PerCPUArrayMap<u32, DataRec>, stats_rec: &mut StatsRecord) {
     map_collect(hmap, &mut stats_rec.stats)
 }
 
@@ -103,11 +103,19 @@ fn calc_period(curr: &Record, prev: &Record) -> f64 {
     period
 }
 
-fn map_collect(hmap: &ArrayMap<u32, DataRec>, rec: &mut Record) {
+fn map_collect(hmap: &PerCPUArrayMap<u32, DataRec>, rec: &mut Record) {
+    let mut sum_bytes: usize = 0;
+    let mut sum_packets: u64 = 0;
+
     rec.timestamp = gettime();
-    let value = hmap.get(XDP_PASS).unwrap();
-    rec.total.rx_packets = value.rx_packets;
-    rec.total.rx_bytes = value.rx_bytes;
+    let values = hmap.get(XDP_PASS).unwrap_or(vec![]);
+    for value in values.iter() {
+        sum_packets += value.rx_packets;
+        sum_bytes += value.rx_bytes;
+    }
+
+    rec.total.rx_packets = sum_packets;
+    rec.total.rx_bytes = sum_bytes;
 }
 
 fn gettime() -> u64 {
