@@ -1,0 +1,24 @@
+[package]
+name = "parser"
+version = "0.1.0"
+edition = '2018'
+
+[dependencies]
+cty = "0.2"
+redbpf-probes = { git = "http://github.com/shun159/redbpf", branch = "master" , version = "1.1" }
+redbpf-macros = { git = "http://github.com/shun159/redbpf", branch = "master" , version = "1.1" }
+
+[build-dependencies]
+cargo-bpf = { git = "http://github.com/shun159/redbpf", branch = "master", version = "1.1" }
+
+[features]
+default = []
+probes = []
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "parser"
+path = "src/kern/main.rs"
+required-features = ["probes"]
